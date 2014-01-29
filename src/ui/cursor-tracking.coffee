@@ -107,7 +107,7 @@ ui.cursor =
         e.originalEvent.preventDefault()
 
         # Send the event to ui, which will dispatch it to the appropriate places
-        ui.mousedown(e, e.target)
+        ui.dispatch.mousedown(e, e.target)
 
         # Set tracking variables
         @down = true
@@ -119,26 +119,26 @@ ui.cursor =
 
       if isDefaultQuarantined(e.target)
         ui.hotkeys.disable() if not allowsHotkeys(e.target)
-        ui.dragSelection.end((->), true)
+        ui.dispatch.dragSelection.end((->), true)
         return true
       else
         ui.hotkeys.use("app")
 
-        ui.mouseup(e, e.target)
+        ui.dispatch.mouseup(e, e.target)
         # End dragging sequence if it was occurring
         if @dragging and not @draggingJustBegan
-          ui.stopDrag(e, @lastDownTarget)
+          ui.dispatch.stopDrag(e, @lastDownTarget)
         else
           if @doubleclickArmed
             @doubleclickArmed = false
-            ui.doubleclick(@lastEvent, @lastDownTarget)
+            ui.dispatch.doubleclick(@lastEvent, @lastDownTarget)
             if isDefaultQuarantined(e.target)
               ui.hotkeys.disable() if not allowsHotkeys(e.target)
-              ui.dragSelection.end((->), true)
+              ui.dispatch.dragSelection.end((->), true)
           else
             # It's a static click, meaning the cursor didn't move
             # between mousedown and mouseup so no drag occurred.
-            ui.click(e, e.target)
+            ui.dispatch.click(e, e.target)
             # HACK
             if e.target.nodeName is "text"
               @armDoubleClick()
@@ -162,7 +162,7 @@ ui.cursor =
         return true
       else
         if true
-          ui.mousemove(e, e.target)
+          ui.dispatch.mousemove(e, e.target)
           e.preventDefault()
 
           # Set some tracking variables
@@ -173,11 +173,11 @@ ui.cursor =
           # Initiate dragging, or continue it if it's been initiated.
           if @down
             if @dragging
-              ui.continueDrag(e, @lastDownTarget)
+              ui.dispatch.continueDrag(e, @lastDownTarget)
               @draggingJustBegan = false
             # Allow for slight movement without triggering drag
             else if @currentPosn.distanceFrom(@lastDown) > SETTINGS.DRAG_THRESHOLD
-              ui.startDrag(@lastEvent, @lastDownTarget)
+              ui.dispatch.startDrag(@lastEvent, @lastDownTarget)
               @dragging = @draggingJustBegan = true
 
     @_mouseover = (e) =>
@@ -191,10 +191,10 @@ ui.cursor =
 
       # Unhover from the last element we hovered on
       if @lastHoverState?
-        ui.unhover(e, @lastHoverState)
+        ui.dispatch.unhover(e, @lastHoverState)
 
       # And hover on the new one! Simple shit.
-      ui.hover(e, @inHoverState)
+      ui.dispatch.hover(e, @inHoverState)
 
     $('body')
       .click (e) =>

@@ -85,6 +85,7 @@ src: !!omap
     - swatch-duo
     - snapping
     - canvas
+    - cursor-dispatch
     - cursor-tracking
     - drag-select
     - transformer

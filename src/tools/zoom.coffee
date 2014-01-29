@@ -51,9 +51,7 @@ tools.zoom = new Tool
         ui.dragSelection.end((r) -> ui.canvas.zoomToFit r)
       else if e.which is 3
         ui.dragSelection.end(-> ui.canvas.zoomOut())
-        #ui.dragSelection.end((r) -> ui.canvas.zoomToFit r)
 
       for elem in ui.elements
         elem.refreshUI()
-
 

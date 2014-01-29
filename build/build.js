@@ -9132,147 +9132,6 @@ Contact: me@artur.co
     switchToLastTool: function() {
       return this.switchToTool(this.uistate.get('lastTool'));
     },
-    hover: function(e, target) {
-      var menu, menus, topUI;
-      e.target = target;
-      this.uistate.get('tool').dispatch(e, "hover");
-      topUI = isOnTopUI(target);
-      if (topUI) {
-        switch (topUI) {
-          case "menu":
-            menus = objectValues(this.menu.menus);
-            if (menus.filter(function(menu) {
-              return menu.dropdownOpen;
-            }).length > 0) {
-              menu = menus.filter(function(menu) {
-                return menu.itemid === target.id;
-              })[0];
-              if (menu != null) {
-                return menu.openDropdown();
-              }
-            }
-        }
-      }
-    },
-    unhover: function(e, target) {
-      e.target = target;
-      return this.uistate.get('tool').dispatch(e, "unhover");
-    },
-    click: function(e, target) {
-      var t, topUI, _ref3, _ref4;
-      if ((target.nodeName.toLowerCase() === "emph") || (target.hasAttribute("buttontext"))) {
-        t = $(target).closest(".menu-item")[0];
-        if (t == null) {
-          t = $(target).closest(".menu")[0];
-        }
-        target = t;
-      }
-      topUI = isOnTopUI(target);
-      if (topUI) {
-        switch (topUI) {
-          case "menu":
-            return (_ref3 = this.menu.menu(target.id)) != null ? _ref3._click(e) : void 0;
-          case "menu-item":
-            return (_ref4 = this.menu.item(target.id)) != null ? _ref4._click(e) : void 0;
-          default:
-            return this.topUI.dispatch(e, "click");
-        }
-      } else {
-        return this.uistate.get('tool').dispatch(e, "click");
-      }
-    },
-    doubleclick: function(e, target) {
-      return this.uistate.get('tool').dispatch(e, "doubleclick");
-    },
-    mousemove: function(e) {
-      var topUI;
-      topUI = isOnTopUI(e.target);
-      if (topUI) {
-        this.topUI.dispatch(e, "mousemove");
-      }
-      if (this.uistate.get('tool') === tools.paw) {
-        return dom.$toolCursorPlaceholder.css({
-          left: e.clientX - 8,
-          top: e.clientY - 8
-        });
-      }
-    },
-    mousedown: function(e) {
-      if (!isOnTopUI(e.target)) {
-        this.menu.closeAllDropdowns();
-        this.refreshUtilities();
-        return this.uistate.get('tool').dispatch(e, "mousedown");
-      }
-    },
-    mouseup: function(e) {
-      var topUI;
-      topUI = isOnTopUI(e.target);
-      if (topUI) {
-        return this.topUI.dispatch(e, "mouseup");
-      } else {
-        e.stopPropagation();
-        return this.uistate.get('tool').dispatch(e, "mouseup");
-      }
-    },
-    startDrag: function(e) {
-      var key, topUI, _i, _len, _ref3, _results;
-      topUI = isOnTopUI(e.target);
-      if (topUI) {
-        return this.topUI.dispatch(e, "startDrag");
-      } else {
-        this.uistate.get('tool').initialDragPosn = new Posn(e);
-        this.uistate.get('tool').dispatch(e, "startDrag");
-        _ref3 = this.hotkeys.modifiersDown;
-        _results = [];
-        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          key = _ref3[_i];
-          _results.push(this.uistate.get('tool').activateModifier(key));
-        }
-        return _results;
-      }
-    },
-    continueDrag: function(e, target) {
-      var topUI;
-      e.target = target;
-      topUI = isOnTopUI(target);
-      if (topUI) {
-        return this.topUI.dispatch(e, "continueDrag");
-      } else {
-        return this.uistate.get('tool').dispatch(e, "continueDrag");
-      }
-    },
-    stopDrag: function(e, target) {
-      var releaseTarget, topUI, _ref3, _ref4;
-      document.onselectstart = function() {
-        return true;
-      };
-      releaseTarget = e.target;
-      e.target = target;
-      topUI = isOnTopUI(e.target);
-      if (topUI) {
-        if ((target.nodeName.toLowerCase() === "emph") || (target.hasAttribute("buttontext"))) {
-          target = target.parentNode;
-        }
-        switch (topUI) {
-          case "menu":
-            if (releaseTarget === target) {
-              return (_ref3 = this.menu.menu(target.id)) != null ? _ref3._click(e) : void 0;
-            }
-            break;
-          case "menu-item":
-            if (releaseTarget === target) {
-              return (_ref4 = this.menu.item(target.id)) != null ? _ref4._click(e) : void 0;
-            }
-            break;
-          default:
-            return this.topUI.dispatch(e, "stopDrag");
-        }
-      } else {
-        this.uistate.get('tool').dispatch(e, "stopDrag");
-        this.uistate.get('tool').initialDragPosn = null;
-        return this.snap.toNothing();
-      }
-    },
     fill: null,
     stroke: null,
     elements: [],
@@ -10564,6 +10423,157 @@ Contact: me@artur.co
     return ui.canvas.redraw();
   });
 
+  ui.dispatch = {
+    hover: function(e, target) {
+      var menu, menus, topUI;
+      e.target = target;
+      ui.uistate.get('tool').dispatch(e, "hover");
+      topUI = isOnTopUI(target);
+      if (topUI) {
+        switch (topUI) {
+          case "menu":
+            menus = objectValues(ui.menu.menus);
+            if (menus.filter(function(menu) {
+              return menu.dropdownOpen;
+            }).length > 0) {
+              menu = menus.filter(function(menu) {
+                return menu.itemid === target.id;
+              })[0];
+              if (menu != null) {
+                return menu.openDropdown();
+              }
+            }
+        }
+      }
+    },
+    unhover: function(e, target) {
+      e.target = target;
+      return ui.uistate.get('tool').dispatch(e, "unhover");
+    },
+    click: function(e, target) {
+      var t, topUI, _ref3, _ref4;
+      if ((target.nodeName.toLowerCase() === "emph") || (target.hasAttribute("buttontext"))) {
+        t = $(target).closest(".menu-item")[0];
+        if (t == null) {
+          t = $(target).closest(".menu")[0];
+        }
+        target = t;
+      }
+      topUI = isOnTopUI(target);
+      if (topUI) {
+        if (e.which !== 1) {
+          return;
+        }
+        switch (topUI) {
+          case "menu":
+            return (_ref3 = ui.menu.menu(target.id)) != null ? _ref3._click(e) : void 0;
+          case "menu-item":
+            return (_ref4 = ui.menu.item(target.id)) != null ? _ref4._click(e) : void 0;
+          default:
+            return ui.topUI.dispatch(e, "click");
+        }
+      } else {
+        if (e.which === 1) {
+          return ui.uistate.get('tool').dispatch(e, "click");
+        } else if (e.which === 3) {
+          return ui.uistate.get('tool').dispatch(e, "rightClick");
+        }
+      }
+    },
+    doubleclick: function(e, target) {
+      return ui.uistate.get('tool').dispatch(e, "doubleclick");
+    },
+    mousemove: function(e) {
+      var topUI;
+      topUI = isOnTopUI(e.target);
+      if (topUI) {
+        ui.topUI.dispatch(e, "mousemove");
+      }
+      if (ui.uistate.get('tool') === tools.paw) {
+        return dom.$toolCursorPlaceholder.css({
+          left: e.clientX - 8,
+          top: e.clientY - 8
+        });
+      }
+    },
+    mousedown: function(e) {
+      if (!isOnTopUI(e.target)) {
+        ui.menu.closeAllDropdowns();
+        ui.refreshUtilities();
+        return ui.uistate.get('tool').dispatch(e, "mousedown");
+      }
+    },
+    mouseup: function(e) {
+      var topUI;
+      topUI = isOnTopUI(e.target);
+      if (topUI) {
+        return ui.topUI.dispatch(e, "mouseup");
+      } else {
+        e.stopPropagation();
+        return ui.uistate.get('tool').dispatch(e, "mouseup");
+      }
+    },
+    startDrag: function(e) {
+      var key, topUI, _i, _len, _ref3, _results;
+      topUI = isOnTopUI(e.target);
+      if (topUI) {
+        return ui.topUI.dispatch(e, "startDrag");
+      } else {
+        ui.uistate.get('tool').initialDragPosn = new Posn(e);
+        ui.uistate.get('tool').dispatch(e, "startDrag");
+        _ref3 = ui.hotkeys.modifiersDown;
+        _results = [];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          key = _ref3[_i];
+          _results.push(ui.uistate.get('tool').activateModifier(key));
+        }
+        return _results;
+      }
+    },
+    continueDrag: function(e, target) {
+      var topUI;
+      e.target = target;
+      topUI = isOnTopUI(target);
+      if (topUI) {
+        return ui.topUI.dispatch(e, "continueDrag");
+      } else {
+        return ui.uistate.get('tool').dispatch(e, "continueDrag");
+      }
+    },
+    stopDrag: function(e, target) {
+      var releaseTarget, topUI, _ref3, _ref4;
+      document.onselectstart = function() {
+        return true;
+      };
+      releaseTarget = e.target;
+      e.target = target;
+      topUI = isOnTopUI(e.target);
+      if (topUI) {
+        if ((target.nodeName.toLowerCase() === "emph") || (target.hasAttribute("buttontext"))) {
+          target = target.parentNode;
+        }
+        switch (topUI) {
+          case "menu":
+            if (releaseTarget === target) {
+              return (_ref3 = ui.menu.menu(target.id)) != null ? _ref3._click(e) : void 0;
+            }
+            break;
+          case "menu-item":
+            if (releaseTarget === target) {
+              return (_ref4 = ui.menu.item(target.id)) != null ? _ref4._click(e) : void 0;
+            }
+            break;
+          default:
+            return ui.topUI.dispatch(e, "stopDrag");
+        }
+      } else {
+        ui.uistate.get('tool').dispatch(e, "stopDrag");
+        ui.uistate.get('tool').initialDragPosn = null;
+        return ui.snap.toNothing();
+      }
+    }
+  };
+
   /*
   
     Cursor event overriding :D
@@ -10642,7 +10652,7 @@ Contact: me@artur.co
           $('[contenteditable]').blur();
           ui.hotkeys.use("app");
           e.originalEvent.preventDefault();
-          ui.mousedown(e, e.target);
+          ui.dispatch.mousedown(e, e.target);
           _this.down = true;
           _this.lastDown = new Posn(e);
           _this.downOn = e.target;
@@ -10654,25 +10664,25 @@ Contact: me@artur.co
           if (!allowsHotkeys(e.target)) {
             ui.hotkeys.disable();
           }
-          ui.dragSelection.end((function() {}), true);
+          ui.dispatch.dragSelection.end((function() {}), true);
           return true;
         } else {
           ui.hotkeys.use("app");
-          ui.mouseup(e, e.target);
+          ui.dispatch.mouseup(e, e.target);
           if (_this.dragging && !_this.draggingJustBegan) {
-            ui.stopDrag(e, _this.lastDownTarget);
+            ui.dispatch.stopDrag(e, _this.lastDownTarget);
           } else {
             if (_this.doubleclickArmed) {
               _this.doubleclickArmed = false;
-              ui.doubleclick(_this.lastEvent, _this.lastDownTarget);
+              ui.dispatch.doubleclick(_this.lastEvent, _this.lastDownTarget);
               if (isDefaultQuarantined(e.target)) {
                 if (!allowsHotkeys(e.target)) {
                   ui.hotkeys.disable();
                 }
-                ui.dragSelection.end((function() {}), true);
+                ui.dispatch.dragSelection.end((function() {}), true);
               }
             } else {
-              ui.click(e, e.target);
+              ui.dispatch.click(e, e.target);
               if (e.target.nodeName === "text") {
                 _this.armDoubleClick();
               }
@@ -10697,17 +10707,17 @@ Contact: me@artur.co
           return true;
         } else {
           if (true) {
-            ui.mousemove(e, e.target);
+            ui.dispatch.mousemove(e, e.target);
             e.preventDefault();
             _this.wasDownLast = _this.down;
             _this.lastEvent = e;
             _this.currentPosn = new Posn(e);
             if (_this.down) {
               if (_this.dragging) {
-                ui.continueDrag(e, _this.lastDownTarget);
+                ui.dispatch.continueDrag(e, _this.lastDownTarget);
                 return _this.draggingJustBegan = false;
               } else if (_this.currentPosn.distanceFrom(_this.lastDown) > SETTINGS.DRAG_THRESHOLD) {
-                ui.startDrag(_this.lastEvent, _this.lastDownTarget);
+                ui.dispatch.startDrag(_this.lastEvent, _this.lastDownTarget);
                 return _this.dragging = _this.draggingJustBegan = true;
               }
             }
@@ -10721,9 +10731,9 @@ Contact: me@artur.co
         _this.lastHoverState = _this.inHoverState;
         _this.inHoverState = e.target;
         if (_this.lastHoverState != null) {
-          ui.unhover(e, _this.lastHoverState);
+          ui.dispatch.unhover(e, _this.lastHoverState);
         }
-        return ui.hover(e, _this.inHoverState);
+        return ui.dispatch.hover(e, _this.inHoverState);
       };
       $('body').click(function(e) {
         return _this._click(e);
@@ -10735,6 +10745,8 @@ Contact: me@artur.co
         return _this._mouseup(e);
       }).mouseover(function(e) {
         return _this._mouseover(e);
+      }).on('contextmenu', function(e) {
+        return e.preventDefault();
       });
       return ui.window.on('focus', function() {
         return _this.currentPosn = new Posn(-100, -100);
@@ -14644,6 +14656,8 @@ Contact: me@artur.co
 
   Tool.prototype.click = noop;
 
+  Tool.prototype.rightClick = noop;
+
   Tool.prototype.mousedown = noop;
 
   Tool.prototype.mouseup = noop;
@@ -15796,9 +15810,20 @@ Contact: me@artur.co
     click: {
       all: function(e) {
         if (ui.hotkeys.modifiersDown.has("alt")) {
-          ui.canvas.zoomOut();
+          ui.canvas.zoom100();
         } else {
           ui.canvas.zoomIn();
+        }
+        ui.window.centerOn(new Posn(e.canvasX, e.canvasY));
+        return ui.refreshAfterZoom();
+      }
+    },
+    rightClick: {
+      all: function(e) {
+        if (ui.hotkeys.modifiersDown.has("alt")) {
+          ui.canvas.zoom100();
+        } else {
+          ui.canvas.zoomOut();
         }
         ui.window.centerOn(new Posn(e.canvasX, e.canvasY));
         return ui.refreshAfterZoom();
@@ -15815,11 +15840,21 @@ Contact: me@artur.co
       }
     },
     stopDrag: {
-      all: function() {
+      all: function(e) {
         var elem, _i, _len, _ref3, _results;
-        ui.dragSelection.end(function(r) {
-          return ui.canvas.zoomToFit(r);
-        });
+        if (ui.hotkeys.modifiersDown.has("alt")) {
+          ui.dragSelection.end(function() {
+            return ui.canvas.zoom100();
+          });
+        } else if (e.which === 1) {
+          ui.dragSelection.end(function(r) {
+            return ui.canvas.zoomToFit(r);
+          });
+        } else if (e.which === 3) {
+          ui.dragSelection.end(function() {
+            return ui.canvas.zoomOut();
+          });
+        }
         _ref3 = ui.elements;
         _results = [];
         for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
