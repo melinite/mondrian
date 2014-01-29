@@ -8990,26 +8990,6 @@ Contact: me@artur.co
     clear: function() {
       return $("#ui .point.handle").remove();
     },
-    importState: function(state) {
-      var _this = this;
-      this.fill.absorb(new Color(state.fill));
-      this.stroke.absorb(new Color(state.stroke));
-      this.canvas.setZoom(parseFloat(state.zoom));
-      this.refreshAfterZoom();
-      this.canvas.normal = new Posn(state.normal);
-      this.canvas.refreshPosition();
-      if (state.tool != null) {
-        return secondRoundSetup.push(function() {
-          return _this.switchToTool(objectValues(tools).filter(function(t) {
-            return t.id === state.tool;
-          })[0]);
-        });
-      } else {
-        return secondRoundSetup.push(function() {
-          return _this.switchToTool(tools.cursor);
-        });
-      }
-    },
     "new": function(width, height, normal, zoom) {
       if (normal == null) {
         normal = this.canvas.normal;

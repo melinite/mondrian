@@ -56,37 +56,6 @@ window.ui =
     $("#ui .point.handle").remove()
 
 
-  # UI state management
-  # TODO Abstract into its own class
-
-  importState: (state) ->
-    # Given an object of certain attributes,
-    # configure the UI to match that state.
-    # Keys to give:
-    #   fill:        hex string of color
-    #   stroke:      hex string of color
-    #   strokeWidth: number
-    #   normal:      posn.toString()
-    #   zoomLevel:   number
-
-    @fill.absorb new Color state.fill
-    @stroke.absorb new Color state.stroke
-
-    @canvas.setZoom parseFloat state.zoom
-    @refreshAfterZoom()
-
-    @canvas.normal = new Posn(state.normal)
-    @canvas.refreshPosition()
-
-    if state.tool?
-      secondRoundSetup.push =>
-        @switchToTool(objectValues(tools).filter((t) -> t.id is state.tool)[0])
-    else
-      secondRoundSetup.push =>
-        @switchToTool(tools.cursor) # Noobz
-
-
-
   new: (width, height, normal = @canvas.normal, zoom = @canvas.zoom) ->
     # Set up the UI for a new file. Give two dimensions.
     # TODO Add a user interface for specifying file dimensions
