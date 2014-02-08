@@ -1,8 +1,16 @@
 # Cakefile for Mondrian
 # Builds the app and the test files
 
+connect = require('connect')
+http = require('http')
+
 fs     = require 'fs'
 {exec} = require 'child_process'
+lessc  = require 'less'
+colors = require 'colors'
+haml   = require 'haml'
+
+ROOT_BUILD_DIRECTORY = 'build'
 
 SOURCE_HEADER = '''
                 ###
@@ -36,7 +44,7 @@ filePaths = (callback, keys) ->
     else
       dir = key
 
-    paths = paths.concat ("src/#{dir or ''}#{if dir then '/' else ''}#{fn}.coffee" for fn in fns)
+    paths = paths.concat ("src/coffee/#{dir or ''}#{if dir then '/' else ''}#{fn}.coffee" for fn in fns)
 
   callback paths
 
@@ -45,6 +53,37 @@ validateBuildFiles = (paths) ->
   for path in paths
     if not fs.existsSync path
       throw "#{path} does not exist"
+
+log = (status, msg) ->
+  switch status
+    when "ok"
+      console.log "[OK]    ".green + msg
+    when "error"
+      console.log "[ERROR] ".red + msg
+    when "info"
+      console.log "[INFO]  ".magenta + msg
+
+compileCSS = (pairs) ->
+  pairs.forEach (config) ->
+    startTime = new Date()
+    fs.readFile config.source, 'utf-8', (e, data) ->
+      lessc.render data, (e, css) ->
+        if not e
+          fs.writeFile config.dest, css
+          compileTime = (new Date().valueOf() - startTime.valueOf()) / 1000
+          log "ok", "Compiled #{config.source} => #{config.dest} in #{compileTime} seconds"
+        else
+          console.log lessc.formatError e, { color: true } if e
+
+compileHAML = (pairs) ->
+  pairs.forEach (config) ->
+    startTime = new Date()
+    fs.readFile config.source, 'utf-8', (e, data) ->
+      html = haml.render data.toString()
+      fs.writeFile config.dest, html
+      compileTime = (new Date().valueOf() - startTime.valueOf()) / 1000
+      log "ok", "Compiled #{config.source} => #{config.dest} in #{compileTime} seconds"
+
 
 fileLengths = (paths) ->
   lineLengths = paths.map (p) -> p.length
@@ -69,7 +108,7 @@ fileLengths = (paths) ->
 
   for len in lengths
     console.log len.join('')
-  
+
 
 concatSrcFiles = (paths) ->
   contents = ''
@@ -79,18 +118,33 @@ concatSrcFiles = (paths) ->
   contents
 
 
-compileCoffee = (src, outputFile = 'build/build.js', callback = ->) ->
+compileCoffee = (src, outputFile = "#{ROOT_BUILD_DIRECTORY}/assets/javascript/build.js", callback = ->) ->
   # Write temp file
   tmpFile = outputFile.replace /\.js/, '.coffee'
   fs.writeFile tmpFile, src, 'utf8', (err) ->
     throw err if err
     exec "coffee --compile #{tmpFile}", (err, stdout) ->
-      throw err if err
+      if err
+        log "error", "Coffee compilation failed                           "
+        throw err
       callback()
 
 
 task 'build', 'Build project', ->
-  barLength = 30
+  compileCSS([
+    { source: 'src/less/ui.less',           dest: "#{ROOT_BUILD_DIRECTORY}/assets/style/app.css" }
+    { source: 'src/less/embed.less',        dest: "#{ROOT_BUILD_DIRECTORY}/assets/style/embed.css" }
+    { source: 'src/less/page.less',         dest: "#{ROOT_BUILD_DIRECTORY}/assets/style/page.css" }
+    { source: 'src/less/contributing.less', dest: "#{ROOT_BUILD_DIRECTORY}/assets/style/contributing.css" }
+    { source: 'src/less/testing.less',      dest: "#{ROOT_BUILD_DIRECTORY}/assets/style/testing.css" }
+  ])
+
+  compileHAML([
+    { source: "src/haml/xml.haml",          dest: "#{ROOT_BUILD_DIRECTORY}/xml/index.html" }
+    { source: "src/haml/contributing.haml", dest: "#{ROOT_BUILD_DIRECTORY}/contributing/index.html" }
+  ])
+
+  barLength = 15
 
   if fs.existsSync '.compiletime'
     lastCompileTime = fs.readFileSync '.compiletime', 'utf8'
@@ -104,8 +158,6 @@ task 'build', 'Build project', ->
     validateBuildFiles paths
     # Concat files
     completeSrc = "#{SOURCE_HEADER}\n#{concatSrcFiles paths}"
-    # Compile it all into build/build.js
-    console.log "Compiling #{completeSrc.match(/\n/g).length} lines"
 
     # Progress bar
     compileStart = new Date()
@@ -120,19 +172,33 @@ task 'build', 'Build project', ->
       for x in [0...compileProgress]
         bar += "█"
       for x in [0...barLength - compileProgress]
-        bar += "-"
+        bar += " "
       bar += "] #{Math.round((lastCompileTime - ((compileProgress / barLength) * lastCompileTime)) / 1000)} seconds remaining  \r"
       process.stdout.write bar
     ), progressInterval
 
-    compileCoffee completeSrc, 'build/build.js', ->
+    compiledAppPath = "#{ROOT_BUILD_DIRECTORY}/assets/javascript/build.js"
+
+    compileCoffee completeSrc, compiledAppPath, ->
       compileTime = new Date().valueOf() - compileStart.valueOf()
-      finishedMessage = "Compiled in #{compileTime / 1000} seconds"
+      finishedMessage = "Compiled app => #{compiledAppPath} in #{compileTime / 1000} seconds"
       for x in [0...(barLength - finishedMessage.length) + 30]
         finishedMessage += " "
-      console.log finishedMessage
+      log "ok", finishedMessage
       clearInterval barInterval
       exec "echo #{compileTime} > .compiletime"
+
+
+task 'server', 'Run local server', ->
+  directory = [__dirname, "build"].join('/')
+
+  connect()
+    .use(connect.static(directory))
+    .use(connect.logger('dev'))
+    .listen 3000
+
+  log "info", "Listening on port 3000."
+
 
 task 'lengths', 'Print source file lengths', ->
   filePaths (paths) ->
@@ -169,27 +235,13 @@ task 'tests', 'Run unit tests cuz', (options) ->
 
 
 task 'styles', 'Compile CSS', ->
-  startTime = new Date()
-  exec 'lessc styles/ui.less > build/styles.css'
-  exec 'lessc styles/embed.less > build/embed.css'
-  console.log "Compiled CSS in #{(new Date().valueOf() - startTime.valueOf()) / 1000} seconds"
-
-task 'pages', 'Build pages', ->
-  exec 'lessc styles/page.less > build/styles/page.css'
-  exec 'lessc styles/contributing.less > build/styles/contributing.css'
-  exec 'lessc styles/testing.less > build/styles/testing.css'
-  exec 'haml terms-of-use/index.haml > terms-of-use/index.html'
-  exec 'haml xml/index.haml > xml/index.html'
-  exec 'haml contributing/index.haml > contributing/index.html'
-  exec 'haml signup/index.haml > signup/index.html'
-  exec 'coffee --compile contributing/dance.coffee', (err) ->
-    throw err if err
+  console.log "Build script changed. Build CSS with 'cake build'."
 
 
 task 'minify', 'Minify source code', ->
-    exec 'uglifyjs build/build.js > build/build.min.js', (err, stdout, stderr) ->
+    exec "uglifyjs #{ROOT_BUILD_DIRECTORY}/assets/javascript/build.js > #{ROOT_BUILD_DIRECTORY}/assets/javascript/build.min.js", (err, stdout, stderr) ->
         throw err if err
-        console.log 'Minified JavaScript in build/'
+        console.log "Minified JavaScript in #{ROOT_BUILD_DIRECTORY}/assets/"
 
 task 'dependencies', 'Install node dependencies', ->
   dependencies = [

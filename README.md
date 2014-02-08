@@ -4,7 +4,7 @@ Mondrian is a smart and easy-to-learn vector graphics web app.
 
 Try it at [mondrian.io](http://mondrian.io).
 
-[![mondrian.io](/build/img/screenshot.png)](http://mondrian.io)
+[![mondrian.io](/build/assets/images/screenshot.png)](http://mondrian.io)
 
 ## Features
 
@@ -41,15 +41,19 @@ Mondrian also supports undo/redo through a *(somewhat rough and unstable)* file 
 
 There are no tests written for this system. It's a big todo.
 
-## Building the app
+## Running the app
 
-The app works out of the box. It's a simple static site. To run it locally:
+Mondrian is a simple static site.
+
+To run it locally for the first time you have to clone the repo,
+install the dependencies, and build the source files.
 
 ```
 git clone git@github.com:artursapek/mondrian.git
 cd mondrian
 npm install
-coffee server.coffee --nodejs
+cake build
+cake server
 ```
 
 Then, open [`localhost:3000`](http://localhost:3000) in your web browser, and there you have it!
@@ -60,9 +64,13 @@ You can also access the latest stable build at [mondrian.io](http://mondrian.io)
 
 `npm install`
 
-#### Building the JavaScript
+#### Running the local server
 
-Run the build task to compile all of the files into the executable [`build.js`](build/build.js):
+`cake server`
+
+#### Building the app
+
+Run the build task to compile all of the JavaScript, HTML, and CSS from `/src/` into `/build/`.
 
 `cake build`
 
@@ -70,8 +78,7 @@ It features a dumb progress bar that's based off the last compile time. It's act
 
 ```
 > cake build
-Compiling 16455 lines
-[██████------------------------] 14 seconds remaining
+[██████         ] 14 seconds remaining
 ```
 
 The entire app is written in [Coffeescript](http://coffeescript.org/). You have
@@ -106,12 +113,6 @@ src/ui/selection.coffee
 src/geometry/posn.coffee
 src/geometry/line-segment.coffee
 ```
-
-#### Building the CSS
-
-The stylesheets are written in LESS, and compiled into CSS like so:
-
-`cake styles`
 
 ## Contributing
 

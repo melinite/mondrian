@@ -1,4 +1,4 @@
-# Mondrian build files
+# Mondrian CoffeeScript source files
 # See explanation in /README.md
 
 src: !!omap
@@ -81,6 +81,7 @@ src: !!omap
     - error-reporting
     - afk
     - topui
+    - tooltips
     - swatch
     - swatch-duo
     - snapping
